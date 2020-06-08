@@ -55,6 +55,16 @@
 #include <iothub.h>
 #include <azure_sphere_provisioning.h>
 
+#include "relay.h"
+
+#define MIKROE_PWM  MT3620_GPIO1   //click#1=GPIO0;  click#2=GPIO1
+#define MIKROE_CS   MT3620_GPIO35  //click#1=GPIO34; click#2=GPIO35
+
+static int r1PinFd;  //relay #1
+static GPIO_Value_Type relay1Pin;
+static int r2PinFd;  //relay #2
+static GPIO_Value_Type relay2Pin;
+
 /// <summary>
 /// Exit codes for this application. These are used for the
 /// application exit code. They must all be between zero and 255,
@@ -231,6 +241,25 @@ static void AzureTimerEventHandler(EventLoopTimer *timer)
     }
 }
 
+void initRelay(void)
+{
+    r1PinFd = GPIO_OpenAsOutput(MIKROE_PWM, relay1Pin, GPIO_Value_Low);
+    r2PinFd = GPIO_OpenAsOutput(MIKROE_CS, relay2Pin, GPIO_Value_Low);
+}
+
+void state(RELAY* ptr)
+{
+    if (ptr->relay1_status == 1)
+        GPIO_SetValue(r1PinFd, GPIO_Value_High);
+    else
+        GPIO_SetValue(r1PinFd, GPIO_Value_Low);
+
+    if (ptr->relay2_status == 1)
+        GPIO_SetValue(r2PinFd, GPIO_Value_High);
+    else
+        GPIO_SetValue(r2PinFd, GPIO_Value_Low);
+}
+
 /// <summary>
 ///     Set up SIGTERM termination handler, initialize peripherals, and set up event handlers.
 /// </summary>
@@ -267,6 +296,20 @@ static ExitCode InitPeripheralsAndHandlers(void)
         Log_Debug("ERROR: Could not open SAMPLE_LED: %s (%d).\n", strerror(errno), errno);
         return ExitCode_Init_TwinStatusLed;
     }
+
+    /*RELAY* rptr;
+    rptr = open_relay(state, initRelay);
+
+    relaystate(rptr, relay1_set);
+    relaystate(rptr, relay2_set);*/
+
+    initRelay();
+
+    GPIO_SetValue(r1PinFd, GPIO_Value_High);
+    GPIO_SetValue(r2PinFd, GPIO_Value_High);
+
+    GPIO_SetValue(r1PinFd, GPIO_Value_Low);
+    GPIO_SetValue(r2PinFd, GPIO_Value_Low);
 
     // Set up a timer to poll for button events.
     static const struct timespec buttonPressCheckPeriod = {.tv_sec = 0, .tv_nsec = 1000 * 1000};

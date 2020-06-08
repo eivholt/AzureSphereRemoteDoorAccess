@@ -8,6 +8,10 @@ project(AzureIoT C)
 azsphere_configure_tools(TOOLS_REVISION "20.04")
 azsphere_configure_api(TARGET_API_SET "5")
 
+# set the path to the clickmodule library and Include the click library cmake file
+SET(click_path "clickmodules")
+INCLUDE( ${click_path}/clicklib.cmake )
+
 add_executable(${PROJECT_NAME} main.c eventloop_timer_utilities.c parson.c)
 target_include_directories(${PROJECT_NAME} PUBLIC ${AZURE_SPHERE_API_SET_DIR}/usr/include/azureiot)
 target_compile_definitions(${PROJECT_NAME} PUBLIC AZURE_IOT_HUB_CONFIGURED)
