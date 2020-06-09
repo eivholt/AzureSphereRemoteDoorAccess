@@ -116,7 +116,6 @@ static const char *GetAzureSphereProvisioningResultString(
     AZURE_SPHERE_PROV_RETURN_VALUE provisioningResult);
 static void SendTelemetry(const char *jsonMessage);
 static void SetupAzureClient(void);
-static void SendSimulatedTelemetry(void);
 static void ButtonPollTimerEventHandler(EventLoopTimer *timer);
 static bool IsButtonPressed(int fd, GPIO_Value_Type *oldState);
 static void AzureTimerEventHandler(EventLoopTimer *timer);
@@ -140,12 +139,10 @@ static EventLoopTimer *azureTimer = NULL;
 
 // Azure IoT poll periods
 static const int AzureIoTDefaultPollPeriodSeconds = 1;        // poll azure iot every second
-static const int AzureIoTPollPeriodsPerTelemetry = 5;         // only send telemetry 1/5 of polls
 static const int AzureIoTMinReconnectPeriodSeconds = 60;      // back off when reconnecting
 static const int AzureIoTMaxReconnectPeriodSeconds = 10 * 60; // back off limit
 
 static int azureIoTPollPeriodSeconds = -1;
-static int telemetryCount = 0;
 
 // State variables
 static GPIO_Value_Type sendMessageButtonState = GPIO_Value_High;
@@ -233,11 +230,6 @@ static void AzureTimerEventHandler(EventLoopTimer *timer)
     }
 
     if (iothubAuthenticated) {
-        telemetryCount++;
-        if (telemetryCount == AzureIoTPollPeriodsPerTelemetry) {
-            telemetryCount = 0;
-            SendSimulatedTelemetry();
-        }
         IoTHubDeviceClient_LL_DoWork(iothubClientHandle);
     }
 }
@@ -248,7 +240,7 @@ void initRelay(void)
     r2PinFd = GPIO_OpenAsOutput(MIKROE_CS, relay2Pin, GPIO_Value_Low);
 }
 
-void    state(RELAY* ptr)
+void state(RELAY* ptr)
 {
     if (ptr->relay1_status == 1)
         GPIO_SetValue(r1PinFd, GPIO_Value_High);
@@ -663,28 +655,6 @@ static void TwinReportState(const char *jsonState)
 static void ReportedStateCallback(int result, void *context)
 {
     Log_Debug("INFO: Azure IoT Hub Device Twin reported state callback: status code %d.\n", result);
-}
-
-#define TELEMETRY_BUFFER_SIZE 100
-
-/// <summary>
-///     Generate simulated telemetry and send to Azure IoT Hub.
-/// </summary>
-void SendSimulatedTelemetry(void)
-{
-    // generate a simulated temperature
-    static float temperature = 50.0f;                    // starting temperature
-    float delta = ((float)(rand() % 41)) / 20.0f - 1.0f; // between -1.0 and +1.0
-    temperature += delta;
-
-    char telemetryBuffer[TELEMETRY_BUFFER_SIZE];
-    int len = snprintf(telemetryBuffer, TELEMETRY_BUFFER_SIZE, "{\"Temperature\":\"%3.2f\"}",
-                       temperature);
-    if (len < 0 || len >= TELEMETRY_BUFFER_SIZE) {
-        Log_Debug("ERROR: Cannot write telemetry to buffer.\n");
-        return;
-    }
-    SendTelemetry(telemetryBuffer);
 }
 
 /// <summary>

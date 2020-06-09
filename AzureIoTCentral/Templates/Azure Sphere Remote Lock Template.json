@@ -1,0 +1,86 @@
+{
+  "@id": "urn:remotedooraccess:AzureSphereRemoteLockTemplate_5u1:1",
+  "@type": "CapabilityModel",
+  "implements": [
+    {
+      "@id": "urn:remotedooraccess:AzureSphereRemoteLockTemplate_5u1:cuivsoeyv:1",
+      "@type": "InterfaceInstance",
+      "displayName": {
+        "en": "Interface"
+      },
+      "name": "AzureSphereRemoteLockTemplate_bl",
+      "schema": {
+        "@id": "urn:remotedooraccess:AzureSphereRemoteLockTemplate_bl:1",
+        "@type": "Interface",
+        "displayName": {
+          "en": "Interface"
+        },
+        "contents": [
+          {
+            "@id": "urn:remotedooraccess:AzureSphereRemoteLockTemplate_bl:manufacturer:1",
+            "@type": "Property",
+            "displayName": {
+              "en": "Manufacturer"
+            },
+            "name": "manufacturer",
+            "schema": "string"
+          },
+          {
+            "@id": "urn:remotedooraccess:AzureSphereRemoteLockTemplate_bl:model:1",
+            "@type": "Property",
+            "displayName": {
+              "en": "Model"
+            },
+            "name": "model",
+            "schema": "string"
+          },
+          {
+            "@id": "urn:remotedooraccess:AzureSphereRemoteLockTemplate_bl:StatusLED:1",
+            "@type": "Property",
+            "displayName": {
+              "en": "Status LED"
+            },
+            "name": "StatusLED",
+            "writable": true,
+            "schema": "boolean"
+          },
+          {
+            "@id": "urn:remotedooraccess:AzureSphereRemoteLockTemplate_bl:ButtonPress:1",
+            "@type": "Telemetry",
+            "displayName": {
+              "en": "Button Press"
+            },
+            "name": "ButtonPress",
+            "schema": "boolean"
+          },
+          {
+            "@id": "urn:remotedooraccess:AzureSphereRemoteLockTemplate_bl:UnlockCommand:1",
+            "@type": "Command",
+            "commandType": "synchronous",
+            "durable": false,
+            "displayName": {
+              "en": "UnlockCommand"
+            },
+            "name": "UnlockCommand"
+          },
+          {
+            "@id": "urn:remotedooraccess:AzureSphereRemoteLockTemplate_bl:Lock1:1",
+            "@type": "Property",
+            "displayName": {
+              "en": "Lock1"
+            },
+            "name": "Lock1",
+            "writable": true,
+            "schema": "boolean"
+          }
+        ]
+      }
+    }
+  ],
+  "displayName": {
+    "en": "Azure Sphere Remote Lock Template"
+  },
+  "@context": [
+    "http://azureiot.com/v1/contexts/IoTModel.json"
+  ]
+}
