@@ -55,7 +55,7 @@
 #include <iothub.h>
 #include <azure_sphere_provisioning.h>
 
-#include "clickmodules/RELAY/relay.h"
+#include "relay.h"
 
 #define MIKROE_PWM  MT3620_GPIO1   //click#1=GPIO0;  click#2=GPIO1
 #define MIKROE_CS   MT3620_GPIO35  //click#1=GPIO34; click#2=GPIO35
@@ -64,7 +64,6 @@ static int r1PinFd;  //relay #1
 static GPIO_Value_Type relay1Pin;
 static int r2PinFd;  //relay #2
 static GPIO_Value_Type relay2Pin;
-static RELAY* relaysState;
 
 /// <summary>
 /// Exit codes for this application. These are used for the
@@ -248,7 +247,7 @@ void initRelay(void)
     r2PinFd = GPIO_OpenAsOutput(MIKROE_CS, relay2Pin, GPIO_Value_Low);
 }
 
-void    state(RELAY* ptr)
+void state(RELAY* ptr)
 {
     if (ptr->relay1_status == 1)
         GPIO_SetValue(r1PinFd, GPIO_Value_High);
@@ -297,9 +296,21 @@ static ExitCode InitPeripheralsAndHandlers(void)
         Log_Debug("ERROR: Could not open SAMPLE_LED: %s (%d).\n", strerror(errno), errno);
         return ExitCode_Init_TwinStatusLed;
     }
-    
-    relaysState = open_relay(state, initRelay);
-    
+
+    /*RELAY* rptr;
+    rptr = open_relay(state, initRelay);
+
+    relaystate(rptr, relay1_set);
+    relaystate(rptr, relay2_set);*/
+
+    initRelay();
+
+    GPIO_SetValue(r1PinFd, GPIO_Value_High);
+    GPIO_SetValue(r2PinFd, GPIO_Value_High);
+
+    GPIO_SetValue(r1PinFd, GPIO_Value_Low);
+    GPIO_SetValue(r2PinFd, GPIO_Value_Low);
+
     // Set up a timer to poll for button events.
     static const struct timespec buttonPressCheckPeriod = {.tv_sec = 0, .tv_nsec = 1000 * 1000};
     buttonPollTimer = CreateEventLoopPeriodicTimer(eventLoop, &ButtonPollTimerEventHandler,
@@ -350,14 +361,8 @@ static void ClosePeripheralsAndHandlers(void)
         GPIO_SetValue(deviceTwinStatusLedGpioFd, GPIO_Value_High);
     }
 
-    close_relay(relaysState);
-    GPIO_SetValue(r1PinFd, GPIO_Value_Low);
-    GPIO_SetValue(r2PinFd, GPIO_Value_Low);
-
     CloseFdAndPrintError(sendMessageButtonGpioFd, "SendMessageButton");
     CloseFdAndPrintError(deviceTwinStatusLedGpioFd, "StatusLed");
-    CloseFdAndPrintError(r1PinFd, "Relay1");
-    CloseFdAndPrintError(r2PinFd, "Relay2");
 }
 
 /// <summary>
@@ -515,25 +520,6 @@ static void DeviceTwinCallback(DEVICE_TWIN_UPDATE_STATE updateState, const unsig
         TwinReportState("{\"StatusLED\":{\"value\":true}}");
     } else {
         TwinReportState("{\"StatusLED\":{\"value\":false}}");
-    }
-
-    // The desired properties should have a "Lock1" object
-    JSON_Object* Lock1State = json_object_dotget_object(desiredProperties, "Lock1");
-    if (Lock1State != NULL) {
-        // ... with a "value" field which is a Boolean
-        bool tempStatusRelay = json_object_get_boolean(Lock1State, "value");
-        if (tempStatusRelay != relaystate(relaysState, relay1_rd)) {
-            relaystate(relaysState, tempStatusRelay ? relay1_set : relay1_clr);
-            SendTelemetry(relaystate(relaysState, relay1_rd) == 1 ? "Lock1ClosedEvent" : "Lock1OpenEvent");
-        }
-    }
-
-    // Report current Lock1 state
-    if (relaystate(relaysState, relay1_rd) == 1) {
-        TwinReportState("{\"Lock1\":{\"value\":true}}");
-    }
-    else {
-        TwinReportState("{\"Lock1\":{\"value\":false}}");
     }
 
 cleanup:
